@@ -4,26 +4,38 @@ namespace App\Imports;
 
 use App\Models\Category;
 use App\Models\Product;
-use Maatwebsite\Excel\Concerns\ToModel;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class ProductImport implements ToModel, WithHeadingRow
+class ProductImport implements ToCollection, WithHeadingRow
 {
-    public function model(array $row)
+    public function collection(Collection $rows)
     {
-        $barcode = Category::inRandomOrder()->first()->code . '00' . $row['product_id'] . '00' . $row['unit_id'] . '00' . $row['product_type_id'];
-        $categoryId = Category::inRandomOrder()->first()->id;
-        $code = Category::inRandomOrder()->first()->code . '00' . $row['product_id'];
         
-        return new Product([
-            'category_id' => $categoryId,
-            'unit_id' => $row['unit_id'],
-            'product_type_id' => $row['product_type_id'],
-            'code' => $code,
-            'name' => $row['name'],
-            'barcode' => $barcode,
-            'has_limit' => $row['has_limit'],
-            'note' => $row['note'],
-        ]);
+        $counter = 0;
+
+        foreach ($rows as $row) {
+
+            $counter = $counter + 1;
+
+            if ($counter <= 100) {
+
+                $barcode = Category::inRandomOrder()->first()->code . '00' . $row['Row'] . '00' . $row['Unit Price'] . '00' . $row['Row'];
+                $categoryId = Category::inRandomOrder()->first()->id;
+                $code = Category::inRandomOrder()->first()->code . '00' . $row['Row'];
+
+                Product::create(['category_id' => $categoryId,
+                    'Unit Price' => $row['Unit Price'],
+                    'product_type_id' => $row['Row'],
+                    'code' => $code,
+                    'name' => $row['Item'],
+                    'barcode' => $barcode,
+                    'has_limit' => $row['Order Quantity'],
+                    'note' => $row['Container'],
+                ]);
+                
+            }
+        }
     }
 }

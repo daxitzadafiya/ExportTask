@@ -1,22 +1,34 @@
 <?php
 
 namespace App\Imports;
-
 use App\Models\Category;
 use Illuminate\Support\Str;
-use Maatwebsite\Excel\Concerns\ToModel;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class CategoryImport implements ToModel, WithHeadingRow
+class CategoryImport implements ToCollection, WithHeadingRow
 {
-    public function model(array $row)
-    {
-        $code = Str::random(4) . '00' . $row['id'];
 
-        return new Category([
-            'code' => $code,
-            'name' => $row['name'],
-            'note' => $row['note']
-        ]);
+    public function collection(Collection $rows)
+    {
+        $counter = 0;
+
+        foreach ($rows as $row) {
+
+            $counter = $counter + 1;
+
+            if ($counter <= 100) {
+
+                $code = Str::random(4) . '00' . $row['Row'];
+
+                Category::create([
+                    'code' => $code,
+                    'name' => $row['Category'],
+                    'note' => $row['Container']
+                ]);
+
+            }
+        }
     }
 }
