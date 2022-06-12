@@ -15,4 +15,9 @@ class Category extends Model
         'name',
         'note'
     ];
+
+    public static function findCateoryData($category)
+    {
+        return Category::whereName($category)->select(['id', 'code'])->firstOrFail();
+    }
 }

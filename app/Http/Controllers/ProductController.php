@@ -2,59 +2,45 @@
 
 namespace App\Http\Controllers;
 
-use App\Imports\ProductImport;
 use App\Models\Product;
-use Illuminate\Http\Request;
-use Excel;
+use App\Helpers\FileOperationsHelper;
+use App\Models\Category;
 
 class ProductController extends Controller
 {
-
-    public function index()
+    public function store()
     {
-        //
-    }
+        try {
+            $file = public_path('/csv/SuperstoreSalesTraining.csv');
+
+            $Products = FileOperationsHelper::csvToArray($file);
+
+            for ($i = 0; $i < 100; $i++) {
+
+                $row = $Products[$i];
+
+                $categoryData = Category::findCateoryData($row['Category']);
+
+                if (!empty($categoryData)) {
+                    $categoryId = $categoryData->id;
+                    $code = $categoryData->code . '00' . $row['Row'];
+
+                    $barcode = $code . '00' . $row['Unit Price'] . '00' . $row['Row'];
+
+                    Product::create([
+                        'category_id' => $categoryId,
+                        'code' => $code,
+                        'name' => $row['Customer Name'],
+                        'barcode' => $barcode,
+                        'note' => $row['Container'],
+                    ]);
 
 
-    public function create()
-    {
-        //
-    }
-
-
-    public function store(Request $request)
-    {
-        if ($request->file('product_csv')) {
-            $file = $request->file('product_csv');
-            $extension = $file->getClientOriginalExtension();
-            Excel::import(new ProductImport, $request->file('product_csv'));
-            echo "Product Data Successfully Added";
-        } else {
-            throw new \Exception('No file was uploaded', Response::HTTP_BAD_REQUEST);
+                    return redirect()->back()->with(['success' => true, 'message' => "Products has been imported sucessfully from the local CSV file"]);
+                }
+            }
+        } catch (\Throwable $th) {
+            return redirect()->back()->with(['error' => false, 'message' => "Something went wrong"]);
         }
-    }
-
-
-    public function show(Product $product)
-    {
-        //
-    }
-
-
-    public function edit(Product $product)
-    {
-        //
-    }
-
-
-    public function update(Request $request, Product $product)
-    {
-        //
-    }
-
-
-    public function destroy(Product $product)
-    {
-        //
     }
 }

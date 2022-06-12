@@ -2,60 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Imports\CategoryImport;
+use App\Helpers\FileOperationsHelper;
 use App\Models\Category;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Excel;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
-
-    public function index()
-    {
-        //
-    }
-
 
     public function create()
     {
         return view('import-data');
     }
 
-
-    public function store(Request $request)
+    public function store()
     {
-        if ($request->file('category_csv')) {
-            $file = $request->file('category_csv');
-            $extension = $file->getClientOriginalExtension();
-            Excel::import(new CategoryImport, $request->file('category_csv'));
-            echo "Category Data Successfully Added";
-        } else {
-            throw new \Exception('No file was uploaded', Response::HTTP_BAD_REQUEST);
+
+        try {
+            $file = public_path('/csv/SuperstoreSalesTraining.csv');
+
+            $categories = FileOperationsHelper::csvToArray($file);
+
+            for ($i = 0; $i <= 100; $i++) {
+
+                $row = $categories[$i];
+
+                $code = Str::random(4) . '00' . $row['Row'];
+
+                Category::insertOrIgnore([
+                    'code' => $code,
+                    'name' => $row['Category'],
+                    'note' => $row['Container']
+                ]);
+            }
+
+            return redirect()->back()->with(['success' => true, 'message' => "Categories has been imported sucessfully from the local CSV file"]);
+        } catch (\Throwable $th) {
+            return redirect()->back()->with(['error' => false, 'message' => "Something went wrong"]);
         }
-    }
-
-
-    public function show(Category $category)
-    {
-        //
-    }
-
-
-    public function edit(Category $category)
-    {
-        //
-    }
-
-
-    public function update(Request $request, Category $category)
-    {
-        //
-    }
-
-
-    public function destroy(Category $category)
-    {
-        //
     }
 }
